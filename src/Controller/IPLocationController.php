@@ -35,7 +35,7 @@ class IPLocationController extends AbstractController
             return new Response("Some variables are empty [$ipRangeFrom/$ipRangeTo/$city]");
         }
 
-        if ($this->entityManager->contains($ipLocation)) {
+        if ($this->entityManager->getRepository(Iprangelocation::class)->findOneBy(['ip_range_from' => $ipRangeFrom, 'ip_range_to' => $ipRangeTo])) {
             return new Response("Already have location $ipRangeFrom/$ipRangeTo/$city");
         }
 

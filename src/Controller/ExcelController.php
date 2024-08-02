@@ -54,7 +54,10 @@ class ExcelController extends AbstractController
             $split = explode(',', $buffer);
 
             // echo $ipRangeFrom . '/' . $ipRangeTo . '/' . $cityName . '/' . PHP_EOL;
-            $this->ipLocationController->createIpLocation($split[0], $split[1], $split[5]);
+            if (strlen($split[0]) <= 16 && strlen($split[1]) <= 16) {
+                $this->ipLocationController->createIpLocation($split[0], $split[1], $split[5]);                
+            }
+
             $i++;
 
             if ($i % 1000 == 0) {
