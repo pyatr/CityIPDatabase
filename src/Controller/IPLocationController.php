@@ -15,7 +15,7 @@ class IPLocationController extends AbstractController
     {
     }
 
-    #[Route('/ip_location', name: 'app_ip_location')]
+    #[Route('/', name: 'app_ip_location')]
     public function index(): Response
     {
         return $this->render('ip_location/index.html.twig', [
@@ -24,6 +24,14 @@ class IPLocationController extends AbstractController
     }
 
     #[Route('/ip_location', name: 'create_ip_location')]
+    public function getIpLocation(string $ip)
+    {
+
+        $city = '';
+
+        return new Response($city);
+    }
+
     public function createIpLocation(string $ipRangeFrom, string $ipRangeTo, string $city): Response
     {
         $ipLocation = new Iprangelocation();

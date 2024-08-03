@@ -1,5 +1,6 @@
 {
-    "controllers": {
+    "controllers": {},
+    "controllers-disabled": {
         "@symfony/ux-turbo": {
             "turbo-core": {
                 "enabled": true,
