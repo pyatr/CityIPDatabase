@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 class IPLocationController extends AbstractController
 {
@@ -23,10 +24,10 @@ class IPLocationController extends AbstractController
         ]);
     }
 
-    #[Route('/ip_location', name: 'create_ip_location')]
-    public function getIpLocation(string $ip)
+    #[Route('/get_ip_location', name: 'create_ip_location')]
+    public function getIpLocation(Request $request)
     {
-
+        $ip = $request->query->get('ip');
         $city = '';
 
         return new Response($city);
