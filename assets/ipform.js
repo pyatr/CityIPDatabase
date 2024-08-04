@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         characters.forEach((char, i) => {
             const charAsNumber = Number.parseInt(char);
 
-            if (!isNaN(charAsNumber) && charactersSinceLastDot < 3 && (charAsNumber != 0 || charactersSinceLastDot != 0)) {
+            if (!isNaN(charAsNumber) && charactersSinceLastDot < 3) {
                 cleanCharacters.push(char);
             }
 
@@ -48,10 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+        if (addressParts.length != 4) {
+            window.alert('Неправильный формат адреса. Нужно ровно 4 части.');
+
+            return;
+        }
+
         if (errors.length == 1) {
             window.alert(`Неправильная часть адреса: ${errors.join(', ')}`);
+
+            return;
         } else if (errors.length > 1) {
             window.alert(`Неправильные части адреса: ${errors.join(', ')}`);
+
+            return;
         }
 
         const response = await axios.get(`/get_ip_location?ip=${ip}`);

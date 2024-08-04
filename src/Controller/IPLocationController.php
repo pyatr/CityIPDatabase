@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Iprangelocation;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,11 +25,70 @@ class IPLocationController extends AbstractController
         ]);
     }
 
+    public function updateAllIPsBytes()
+    {
+        $memoryLimit = 2048;
+        ini_set('memory_limit', "{$memoryLimit}M");
+        $portionSize = 1000;
+        $totalCount = $this->countLocations();
+
+        for ($i = 0; $i < $totalCount; $i += $portionSize) {
+            $criteria = Criteria::create()->setMaxResults($portionSize)->setFirstResult($i);
+            $allIpRanges = $this->entityManager->getRepository(Iprangelocation::class)->matching($criteria)->toArray();
+
+            foreach ($allIpRanges as $ipRange) {
+                $rangeFrom = explode('.', $ipRange->getIpRangeFrom());
+                $rangeTo = explode('.', $ipRange->getIpRangeTo());
+
+                $ipRange->setIpByte1From($rangeFrom[0]);
+                $ipRange->setIpByte2From($rangeFrom[1]);
+                $ipRange->setIpByte3From($rangeFrom[2]);
+                $ipRange->setIpByte4From($rangeFrom[3]);
+
+                $ipRange->setIpByte1To($rangeTo[0]);
+                $ipRange->setIpByte2To($rangeTo[1]);
+                $ipRange->setIpByte3To($rangeTo[2]);
+                $ipRange->setIpByte4To($rangeTo[3]);
+
+                $this->entityManager->persist($ipRange);
+            }
+
+            $this->entityManager->flush();
+            $this->entityManager->clear();
+            echo (memory_get_usage(true) / 1048576) . 'MB/' . $i . PHP_EOL;
+        }
+    }
+
     #[Route('/get_ip_location', name: 'create_ip_location')]
     public function getIpLocation(Request $request)
     {
         $ip = $request->query->get('ip');
-        $city = '';
+        $addressParts = explode('.', $ip);
+
+        if (count($addressParts) != 4) {
+            return new Response('Wrong address format');
+        }
+        
+        $memoryLimit = 2048;
+        ini_set('memory_limit', "{$memoryLimit}M");
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->gte('ip_byte_1_from', $addressParts[0]))
+            ->andWhere(Criteria::expr()->lte('ip_byte_1_to', $addressParts[0]))
+            ->andWhere(Criteria::expr()->gte('ip_byte_2_from', $addressParts[1]))
+            ->andWhere(Criteria::expr()->lte('ip_byte_2_to', $addressParts[1]))
+            ->andWhere(Criteria::expr()->gte('ip_byte_3_from', $addressParts[2]))
+            ->andWhere(Criteria::expr()->lte('ip_byte_3_to', $addressParts[2]));
+        //Not using 4th byte because it's always 0 or 255
+        // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]))
+        // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]));
+        $ipRange = $this->entityManager->getRepository(Iprangelocation::class)->matching($criteria)->first();
+
+        if ($ipRange == null) {
+            return new Response("City with IP $ip not found");
+        }
+
+        $city = $ipRange->getCity();
 
         return new Response($city);
     }

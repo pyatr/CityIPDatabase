@@ -11,6 +11,8 @@ doctrine:
         # Very important! Logging takes up as much memory as requests so logs are disabled to avoid script taking up all available memory
         logging: false
         profiling: false
+        types:
+            tinyint:  App\Types\TinyIntType
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
