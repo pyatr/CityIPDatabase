@@ -74,13 +74,32 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const response = await axios.get(`/get_ip_location?ip=${ip}`);
+        let response;
 
-        if (!response.status.toString().startsWith('4') && !response.status.toString().startsWith('5')) {
-            const city = response.data;
+        try {
+            response = await axios.get(`/get_ip_location?ip=${ip}`);
 
+            if (!response.status.toString().startsWith('4') && !response.status.toString().startsWith('5')) {
+                const city = response.data;
+
+                responseDisplay.textContent = city;
+            }
+        }
+        catch (ex) {
+            response = ex.response;
+            responseDisplay.textContent = '';
+
+            switch (response.status) {
+                case 429:
+                    responseDisplay.textContent = "Слишком много запросов";
+                    break;
+                default:
+                    responseDisplay.textContent = response.statusText;
+                    break;
+            }
+        }
+        finally {
             responseDisplay.style.display = '';
-            responseDisplay.textContent = city;
         }
     });
 });

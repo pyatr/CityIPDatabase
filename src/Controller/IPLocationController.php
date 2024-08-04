@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -65,8 +67,14 @@ class IPLocationController extends AbstractController
     }
 
     #[Route('/get_ip_location', name: 'create_ip_location')]
-    public function getIpLocation(Request $request)
+    public function getIpLocation(Request $request, RateLimiterFactory $anonymousApiLimiter)
     {
+        $limiter = $anonymousApiLimiter->create($request->getClientIp());
+
+        if (!$limiter->consume(1)->isAccepted()) {
+            throw new TooManyRequestsHttpException();
+        }
+
         $ip = $request->query->get('ip');
         $addressParts = explode('.', $ip);
 
