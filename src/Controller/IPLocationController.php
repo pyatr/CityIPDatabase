@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Iprangelocation;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -68,17 +67,17 @@ class IPLocationController extends AbstractController
         if (count($addressParts) != 4) {
             return new Response('Wrong address format');
         }
-        
+
         $memoryLimit = 2048;
         ini_set('memory_limit', "{$memoryLimit}M");
 
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->gte('ip_byte_1_from', $addressParts[0]))
-            ->andWhere(Criteria::expr()->lte('ip_byte_1_to', $addressParts[0]))
-            ->andWhere(Criteria::expr()->gte('ip_byte_2_from', $addressParts[1]))
-            ->andWhere(Criteria::expr()->lte('ip_byte_2_to', $addressParts[1]))
-            ->andWhere(Criteria::expr()->gte('ip_byte_3_from', $addressParts[2]))
-            ->andWhere(Criteria::expr()->lte('ip_byte_3_to', $addressParts[2]));
+            ->where(Criteria::expr()->lte('ip_byte_1_from', $addressParts[0]))
+            ->andWhere(Criteria::expr()->gte('ip_byte_1_to', $addressParts[0]))
+            ->andWhere(Criteria::expr()->lte('ip_byte_2_from', $addressParts[1]))
+            ->andWhere(Criteria::expr()->gte('ip_byte_2_to', $addressParts[1]))
+            ->andWhere(Criteria::expr()->lte('ip_byte_3_from', $addressParts[2]))
+            ->andWhere(Criteria::expr()->gte('ip_byte_3_to', $addressParts[2]));
         //Not using 4th byte because it's always 0 or 255
         // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]))
         // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]));
@@ -96,8 +95,17 @@ class IPLocationController extends AbstractController
     public function createIpLocation(string $ipRangeFrom, string $ipRangeTo, string $city): Response
     {
         $ipLocation = new Iprangelocation();
-        $ipLocation->setIpRangeFrom($ipRangeFrom);
-        $ipLocation->setIpRangeTo($ipRangeTo);
+        $ipRangeFrom = explode('.', $ipRangeFrom);
+        $ipRangeTo = explode('.', $ipRangeTo);
+
+        $ipLocation->setIpByte1From($ipRangeFrom[0]);
+        $ipLocation->setIpByte2From($ipRangeFrom[1]);
+        $ipLocation->setIpByte3From($ipRangeFrom[2]);
+        $ipLocation->setIpByte4From($ipRangeFrom[3]);
+        $ipLocation->setIpByte1To($ipRangeTo[0]);
+        $ipLocation->setIpByte2To($ipRangeTo[1]);
+        $ipLocation->setIpByte3To($ipRangeTo[2]);
+        $ipLocation->setIpByte4To($ipRangeTo[3]);
         $ipLocation->setCity($city);
 
         if ($ipRangeFrom == '' || $ipRangeTo == '' || $city == '') {

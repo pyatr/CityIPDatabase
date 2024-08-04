@@ -66,6 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const response = await axios.get(`/get_ip_location?ip=${ip}`);
 
-        console.log(response.data);
+        if (!response.status.toString().startsWith('4') && !response.status.toString().startsWith('5')) {
+            const city = response.data;
+
+            console.log(city);
+        }
     });
 });
