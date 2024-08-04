@@ -71,17 +71,19 @@ class IPLocationController extends AbstractController
         $memoryLimit = 2048;
         ini_set('memory_limit', "{$memoryLimit}M");
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->lte('ip_byte_1_from', $addressParts[0]))
-            ->andWhere(Criteria::expr()->gte('ip_byte_1_to', $addressParts[0]))
-            ->andWhere(Criteria::expr()->lte('ip_byte_2_from', $addressParts[1]))
-            ->andWhere(Criteria::expr()->gte('ip_byte_2_to', $addressParts[1]))
-            ->andWhere(Criteria::expr()->lte('ip_byte_3_from', $addressParts[2]))
-            ->andWhere(Criteria::expr()->gte('ip_byte_3_to', $addressParts[2]));
+        $queryBuilder = $this->entityManager->getRepository(Iprangelocation::class)->createQueryBuilder('ip_range');
         //Not using 4th byte because it's always 0 or 255
-        // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]))
-        // ->where(Criteria::expr()->lt('ip_byte_4_from', $addressParts[3]));
-        $ipRange = $this->entityManager->getRepository(Iprangelocation::class)->matching($criteria)->first();
+        $query = $queryBuilder->select('ip_range')
+            ->setFirstResult(0)
+            ->setMaxResults(1)
+            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_1_from', $addressParts[0]))
+            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_1_to', $addressParts[0]))
+            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_2_from', $addressParts[1]))
+            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_2_to', $addressParts[1]))
+            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_3_from', $addressParts[2]))
+            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_3_to', $addressParts[2]))
+            ->getQuery();
+        $ipRange = $query->getSingleResult();
 
         if ($ipRange == null) {
             return new Response("City with IP $ip not found");
