@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello IpLocationController!
+{% block title %}City IP
 {% endblock %}
 
 {% block body %}
@@ -35,6 +35,7 @@
 		<p>Введите IP-адрес</p>
 		<form id="ip-form" autocomplete="off">
 			<input type="text" name="ip" label="Type in IP address"/>
+			<input type="button" id="generate-random" value="Случайный IP"/>
 			<input type="submit" / value="Узнать город">
 		</form>
 	</div>

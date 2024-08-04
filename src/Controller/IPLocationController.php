@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 class IPLocationController extends AbstractController
 {
+    //Find out - select id,max(ip_address_to - ip_address_from) as diff from iprangelocation group by id order by diff desc limit 10;
+    private int $maxIpDifference = 50331647;
+
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
@@ -24,36 +27,39 @@ class IPLocationController extends AbstractController
         ]);
     }
 
-    public function updateAllIPsBytes()
+    public function ipToInt(string $ip)
+    {
+        $split = explode('.', $ip);
+
+        if (count($split) < 4) {
+            return 0;
+        }
+
+        return $split[0] * pow(256, 3) + $split[1] * pow(256, 2) + $split[2] * 256 + $split[3];
+    }
+
+    public function updateAllIPsInt()
     {
         $memoryLimit = 2048;
         ini_set('memory_limit', "{$memoryLimit}M");
-        $portionSize = 1000;
+        $portionSize = 100000;
         $totalCount = $this->countLocations();
+        gc_enable();
 
         for ($i = 0; $i < $totalCount; $i += $portionSize) {
             $criteria = Criteria::create()->setMaxResults($portionSize)->setFirstResult($i);
             $allIpRanges = $this->entityManager->getRepository(Iprangelocation::class)->matching($criteria)->toArray();
 
             foreach ($allIpRanges as $ipRange) {
-                $rangeFrom = explode('.', $ipRange->getIpRangeFrom());
-                $rangeTo = explode('.', $ipRange->getIpRangeTo());
-
-                $ipRange->setIpByte1From($rangeFrom[0]);
-                $ipRange->setIpByte2From($rangeFrom[1]);
-                $ipRange->setIpByte3From($rangeFrom[2]);
-                $ipRange->setIpByte4From($rangeFrom[3]);
-
-                $ipRange->setIpByte1To($rangeTo[0]);
-                $ipRange->setIpByte2To($rangeTo[1]);
-                $ipRange->setIpByte3To($rangeTo[2]);
-                $ipRange->setIpByte4To($rangeTo[3]);
+                $ipRange->setIpAddressFrom($this->ipToInt($ipRange->getIpRangeFrom()));
+                $ipRange->setIpAddressTo($this->ipToInt($ipRange->getIpRangeTo()));
 
                 $this->entityManager->persist($ipRange);
             }
 
             $this->entityManager->flush();
             $this->entityManager->clear();
+            gc_collect_cycles();
             echo (memory_get_usage(true) / 1048576) . 'MB/' . $i . PHP_EOL;
         }
     }
@@ -68,6 +74,7 @@ class IPLocationController extends AbstractController
             return new Response('Wrong address format');
         }
 
+        $ipAsInt = $this->ipToInt($ip);
         $memoryLimit = 2048;
         ini_set('memory_limit', "{$memoryLimit}M");
 
@@ -76,14 +83,11 @@ class IPLocationController extends AbstractController
         $query = $queryBuilder->select('ip_range')
             ->setFirstResult(0)
             ->setMaxResults(1)
-            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_1_from', $addressParts[0]))
-            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_1_to', $addressParts[0]))
-            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_2_from', $addressParts[1]))
-            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_2_to', $addressParts[1]))
-            ->andWhere($queryBuilder->expr()->lte('ip_range.ip_byte_3_from', $addressParts[2]))
-            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_byte_3_to', $addressParts[2]))
+            ->where($queryBuilder->expr()->lte('ip_range.ip_address_from', $ipAsInt))
+            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_address_from', $ipAsInt - $this->maxIpDifference))
+            ->andWhere($queryBuilder->expr()->gte('ip_range.ip_address_to', $ipAsInt))
             ->getQuery();
-        $ipRange = $query->getSingleResult();
+        $ipRange = $query->getOneOrNullResult();
 
         if ($ipRange == null) {
             return new Response("City with IP $ip not found");
@@ -100,14 +104,19 @@ class IPLocationController extends AbstractController
         $ipRangeFrom = explode('.', $ipRangeFrom);
         $ipRangeTo = explode('.', $ipRangeTo);
 
-        $ipLocation->setIpByte1From($ipRangeFrom[0]);
-        $ipLocation->setIpByte2From($ipRangeFrom[1]);
-        $ipLocation->setIpByte3From($ipRangeFrom[2]);
-        $ipLocation->setIpByte4From($ipRangeFrom[3]);
-        $ipLocation->setIpByte1To($ipRangeTo[0]);
-        $ipLocation->setIpByte2To($ipRangeTo[1]);
-        $ipLocation->setIpByte3To($ipRangeTo[2]);
-        $ipLocation->setIpByte4To($ipRangeTo[3]);
+        $ipLocation->setIpAddressFrom(
+            $ipRangeFrom[0] * pow(256, 3) +
+            $ipRangeFrom[1] * pow(256, 2) +
+            $ipRangeFrom[2] * 256 +
+            $ipRangeFrom[3]
+        );
+
+        $ipLocation->setIpAddressTo(
+            $ipRangeTo[0] * pow(256, 3) +
+            $ipRangeTo[1] * pow(256, 2) +
+            $ipRangeTo[2] * 256 +
+            $ipRangeTo[3]
+        );
         $ipLocation->setCity($city);
 
         if ($ipRangeFrom == '' || $ipRangeTo == '' || $city == '') {

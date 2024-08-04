@@ -2,9 +2,18 @@ import axios from "axios";
 
 document.addEventListener("DOMContentLoaded", () => {
     const ipform = document.getElementById("ip-form");
-    const ipInput = ipform.querySelector('input');
+    const ipInput = ipform.querySelector("input");
+    const generateRandomButton = document.getElementById("generate-random");
 
     ipInput.addEventListener("input", filterIPInput);
+    generateRandomButton.addEventListener("click", generateRandomIP);
+
+    function generateRandomIP() {
+        ipInput.value = Math.floor(Math.random() * 255).toString() + '.' +
+            Math.floor(Math.random() * 255).toString() + '.' +
+            Math.floor(Math.random() * 255).toString() + '.' +
+            Math.floor(Math.random() * 255).toString();
+    }
 
     function filterIPInput(event) {
         const characters = event.target.value.split('');
