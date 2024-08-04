@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ipform = document.getElementById("ip-form");
     const ipInput = ipform.querySelector("input");
     const generateRandomButton = document.getElementById("generate-random");
+    const responseDisplay = document.getElementById("response-display");
 
     ipInput.addEventListener("input", filterIPInput);
     generateRandomButton.addEventListener("click", generateRandomIP);
@@ -78,7 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!response.status.toString().startsWith('4') && !response.status.toString().startsWith('5')) {
             const city = response.data;
 
-            console.log(city);
+            responseDisplay.style.display = '';
+            responseDisplay.textContent = city;
         }
     });
 });
