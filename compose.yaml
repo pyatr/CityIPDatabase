@@ -4,12 +4,18 @@ services:
       context: .
       dockerfile: ./Dockerfile
     tty: true
-    entrypoint: ["sh","startdb.sh"]
+    network_mode: "bridge"
+    entrypoint: [ "sh", "/var/www/html/get-city-by-ip/startdb.sh" ]
     ports:
-    - "8000:8000"
+      - "8000:8000"
     restart: always
     volumes:
       - .:/var/www/html/get-city-by-ip
+      - /var/www/html/get-city-by-ip/node_modules
+      - /var/www/html/get-city-by-ip/vendor
+      - /var/www/html/get-city-by-ip/public
+      - ./public/index.php:/var/www/html/get-city-by-ip/public/index.php
+      - ./public/.htaccess:/var/www/html/get-city-by-ip/public/.htaccess
       - db:/var/lib/mysql
 volumes:
   db:
