@@ -40,32 +40,6 @@ class IPLocationController extends AbstractController
         return $split[0] * pow(256, 3) + $split[1] * pow(256, 2) + $split[2] * 256 + $split[3];
     }
 
-    public function updateAllIPsInt()
-    {
-        $memoryLimit = 2048;
-        ini_set('memory_limit', "{$memoryLimit}M");
-        $portionSize = 100000;
-        $totalCount = $this->countLocations();
-        gc_enable();
-
-        for ($i = 0; $i < $totalCount; $i += $portionSize) {
-            $criteria = Criteria::create()->setMaxResults($portionSize)->setFirstResult($i);
-            $allIpRanges = $this->entityManager->getRepository(Iprangelocation::class)->matching($criteria)->toArray();
-
-            foreach ($allIpRanges as $ipRange) {
-                $ipRange->setIpAddressFrom($this->ipToInt($ipRange->getIpRangeFrom()));
-                $ipRange->setIpAddressTo($this->ipToInt($ipRange->getIpRangeTo()));
-
-                $this->entityManager->persist($ipRange);
-            }
-
-            $this->entityManager->flush();
-            $this->entityManager->clear();
-            gc_collect_cycles();
-            echo (memory_get_usage(true) / 1048576) . 'MB/' . $i . PHP_EOL;
-        }
-    }
-
     #[Route('/get_ip_location', name: 'create_ip_location')]
     public function getIpLocation(Request $request, RateLimiterFactory $anonymousApiLimiter)
     {
