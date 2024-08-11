@@ -28,16 +28,31 @@
 			width: 100%;
 			height: 100vh;
 		}
+
+		.container {
+			display: grid;
+			gap: 8px;
+		}
 	</style>
 
 	<div class="container">
 		<h1>City IP</h1>
 		<p>Введите IP-адрес</p>
 		<p id="response-display" style="display: none"></p>
-		<form id="ip-form" autocomplete="off">
-			<input type="text" name="ip" label="Type in IP address"/>
+		<form id="ip-form" autocomplete="off" style="display: none">
+			<input type="text" name="ip" label="Введите IP-адрес"/>
 			<input type="button" id="generate-random" value="Случайный IP"/>
-			<input type="submit" / value="Узнать город">
+			<input type="submit" value="Узнать город">
+		</form>
+		<form id="login-form" autocomplete="off" style="display: none">
+			<input type="email" name="email" label="Email" placeholder="Email"/>
+			<input type="password" name="password" label="Пароль" placeholder="Пароль"/>
+			<input type="submit" value="Войти">
+		</form>
+		<form id="authorization-form" autocomplete="off" style="display: none">
+			<input type="email" name="email" label="Email" placeholder="Email"/>
+			<input type="password" name="password" label="Пароль" placeholder="Пароль"/>
+			<input type="submit" value="Зарегистрироваться">
 		</form>
 	</div>
 {% endblock %}

@@ -1,5 +1,6 @@
 import './bootstrap.js';
 import './ipform.js';
+import './authorization.js';
 /*
  * Welcome to your app's main JavaScript file!
  *
