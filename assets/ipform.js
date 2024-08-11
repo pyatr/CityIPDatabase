@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getUserToken, isUserAuthorized } from "./authorization";
 
 document.addEventListener("DOMContentLoaded", () => {
     const ipform = document.getElementById("ip-form");
@@ -22,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let charactersSinceLastDot = 0;
         let dotsCount = 0;
 
-        characters.forEach((char, i) => {
+        characters.forEach(char => {
             const charAsNumber = Number.parseInt(char);
 
             if (!isNaN(charAsNumber) && charactersSinceLastDot < 3) {
@@ -74,10 +75,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (!isUserAuthorized()) {
+            window.alert('Пожалуйста, зарегистрируйтесь или войдите в свой аккаунт');
+
+            return;
+        }
+
         let response;
 
         try {
-            response = await axios.get(`/get_ip_location?ip=${ip}`);
+            response = await axios.get(`/api/get_ip_location?ip=${ip}`, {
+                headers: {
+                    Authorization: `Bearer ${getUserToken()}`
+                }
+            });
 
             if (!response.status.toString().startsWith('4') && !response.status.toString().startsWith('5')) {
                 const city = response.data;

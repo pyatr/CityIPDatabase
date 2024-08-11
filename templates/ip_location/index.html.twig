@@ -37,22 +37,23 @@
 
 	<div class="container">
 		<h1>City IP</h1>
-		<p>Введите IP-адрес</p>
 		<p id="response-display" style="display: none"></p>
 		<form id="ip-form" autocomplete="off" style="display: none">
-			<input type="text" name="ip" label="Введите IP-адрес"/>
+			<input type="text" required name="ip" label="Введите IP-адрес"/>
 			<input type="button" id="generate-random" value="Случайный IP"/>
 			<input type="submit" value="Узнать город">
 		</form>
 		<form id="login-form" autocomplete="off" style="display: none">
-			<input type="email" name="email" label="Email" placeholder="Email"/>
-			<input type="password" name="password" label="Пароль" placeholder="Пароль"/>
+			<input type="email" required name="email" label="Email" placeholder="Email"/>
+			<input type="password" required name="password" label="Пароль" placeholder="Пароль"/>
 			<input type="submit" value="Войти">
+			<input type="button" id="switch-to-authorization" value="Перейти к регистрации"/>
 		</form>
 		<form id="authorization-form" autocomplete="off" style="display: none">
-			<input type="email" name="email" label="Email" placeholder="Email"/>
-			<input type="password" name="password" label="Пароль" placeholder="Пароль"/>
+			<input type="email" required name="email" label="Email" placeholder="Email"/>
+			<input type="password" required name="password" label="Пароль" placeholder="Пароль"/>
 			<input type="submit" value="Зарегистрироваться">
+			<input type="button" id="switch-to-login" value="Перейти к логину"/>
 		</form>
 	</div>
 {% endblock %}

@@ -39,16 +39,23 @@ class IPLocationController extends AbstractController
         return $split[0] * pow(256, 3) + $split[1] * pow(256, 2) + $split[2] * 256 + $split[3];
     }
 
-    #[Route('/get_ip_location', name: 'create_ip_location')]
-    public function getIpLocation(Request $request, RateLimiterFactory $anonymousApiLimiter)
+    #[Route('/api/get_ip_location', name: 'create_ip_location')]
+    public function getIpLocation(Request $request, RateLimiterFactory $authenticatedApiLimiter)
     {
-        $limiter = $anonymousApiLimiter->create($request->getClientIp());
+        $authToken = $request->headers->get('Authorization');
+        $limiter = $authenticatedApiLimiter->create($authToken);
 
         if (!$limiter->consume(1)->isAccepted()) {
             throw new TooManyRequestsHttpException();
         }
 
         $ip = $request->query->get('ip');
+
+        return $this->getRealIpLocation($ip);
+    }
+
+    private function getRealIpLocation(string $ip)
+    {
         $addressParts = explode('.', $ip);
 
         if (count($addressParts) != 4) {

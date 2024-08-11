@@ -1,46 +1,113 @@
 const { default: axios } = require("axios");
-const { getCookie } = require("./cookies");
+const { getCookie, setCookie } = require("./cookies");
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const isAuthorized = await isUserAuthorized();
-    console.log(isAuthorized);
-    await loadAuthorizationForm();
-    await loadLoginForm();
-    if (!isAuthorized) {
-    } else {
+    const isAuthorized = isUserAuthorized();
 
+    if (isAuthorized) {
+        const ipform = document.getElementById("ip-form");
+        ipform.style.display = "";
+    } else {
+        const form = document.getElementById("login-form");
+        form.style.display = "";
+
+        await loadAuthorizationForm();
+        await loadLoginForm();
     }
 });
 
+async function getLoginToken(formData) {
+    const config = {
+        headers: {
+            "Content-Type": "application/json",
+        }
+    };
+
+    let response;
+
+    try {
+        response = await axios.post('/api/login_check', formData, config);
+
+        const token = response.data.token;
+
+        if (token) {
+            setCookie('token', token, 7);
+
+            if (isUserAuthorized()) {
+                window.alert('Авторизация успешна! Страница будет перезагружена');
+                window.location.reload();
+            } else {
+                window.alert('Не получилось авторизоваться');
+            }
+        }
+    }
+    catch (ex) {
+        response = ex.response;
+
+        switch (response.status) {
+            case 401:
+                window.alert("Неправильный логин или пароль");
+                break;
+            default:
+                window.alert(response);
+                break;
+        }
+    }
+}
+
 async function loadLoginForm() {
     const form = document.getElementById("login-form");
-    form.style.display = "";
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const config = {
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-        const response = await axios.post('/api/login_check', formData, config);
-        console.log(response);
+
+        await getLoginToken(formData);
+    });
+
+    form.querySelector("input#switch-to-authorization").addEventListener("click", () => {
+        document.getElementById("authorization-form").style.display = "";
+        form.style.display = "none";
     });
 }
 
 async function loadAuthorizationForm() {
     const form = document.getElementById("authorization-form");
-    form.style.display = "";
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const response = await axios.post('/api/register', formData);
-        console.log(response);
+        let response;
+
+        try {
+            response = await axios.post('/api/register', formData);
+
+            await getLoginToken(formData);
+        }
+        catch (ex) {
+            response = ex.response;
+
+            switch (response.status) {
+                case 409:
+                    window.alert(response.data.message);
+                    break;
+                default:
+                    window.alert(response);
+                    break;
+            }
+        }
+    });
+
+    form.querySelector("input#switch-to-login").addEventListener("click", () => {
+        document.getElementById("login-form").style.display = "";
+        form.style.display = "none";
     });
 }
 
-export async function isUserAuthorized() {
+export function getUserToken() {
+    return getCookie('token');
+}
+
+export function isUserAuthorized() {
     return getCookie('token') != ('' || null);
 }
