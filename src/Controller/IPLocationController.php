@@ -62,6 +62,21 @@ class IPLocationController extends AbstractController
             return new Response('Wrong address format');
         }
 
+        $url = "http://ip-api.com/json/$ip";
+        $headers = get_headers($url);
+
+        if (strpos($headers[0], '200') != false) {
+            $ipInfo = file_get_contents($url);
+
+            if (is_string($ipInfo)) {
+                $response = json_decode($ipInfo, true);
+
+                if (key_exists('city', $response)) {
+                    return new Response($response['city']);
+                }
+            }
+        }
+
         $ipAsInt = $this->ipToInt($ip);
         $memoryLimit = 2048;
         ini_set('memory_limit', "{$memoryLimit}M");
